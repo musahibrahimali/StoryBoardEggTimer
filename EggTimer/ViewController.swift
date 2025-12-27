@@ -1,7 +1,9 @@
 import UIKit
+import AVFoundation
 
 class ViewController: UIViewController {
     
+    var player: AVAudioPlayer?
     
     @IBOutlet weak var statusLabel: UILabel!
     @IBOutlet weak var progressBar: UIProgressView!
@@ -15,6 +17,7 @@ class ViewController: UIViewController {
     var countDownTimer: Timer?
     var totalTime = 60;
     var timeRemaining = 60;
+    var hardness: String = ""
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,10 +29,10 @@ class ViewController: UIViewController {
 
     @IBAction func hardnessSelected(_ sender: UIButton) {
         
-        let hardness = sender.currentTitle!
+        hardness = sender.currentTitle!
         
         if let minutes = eggTimes[hardness] {
-            totalTime = minutes * 60
+            totalTime = minutes // * 60
             timeRemaining = totalTime
             starttimer()
         } else {
@@ -39,6 +42,7 @@ class ViewController: UIViewController {
     
     func starttimer() {
         countDownTimer?.invalidate()
+        stopSound()
         // progressBar.setProgress(1.0, animated: true) // start full
         countDownTimer = Timer.scheduledTimer(
             timeInterval: 1.0,
@@ -63,7 +67,8 @@ class ViewController: UIViewController {
     
     func endTimer() {
         countDownTimer?.invalidate()
-        statusLabel.text = "Done!"
+        statusLabel.text = hardness
+        playSound(soundName: "")
         // print("Timer Finished")
     }
     
@@ -73,6 +78,32 @@ class ViewController: UIViewController {
         let formattedTime = String(format: "%02d:%02d", minites, seconds)
         // print(formattedTime)
         return formattedTime
+    }
+    
+    func playSound(soundName: String, extention: String = "mp3") {
+        guard let url = Bundle.main.url(
+            forResource: soundName,
+            withExtension: extention
+        ) else {
+            print("audio file not found")
+            return
+        }
+        
+        // print(url)
+        
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
+            
+            player = try AVAudioPlayer(contentsOf: url)
+            player?.play()
+        } catch let error as NSError {
+            print("Couldn't play sound \(error.debugDescription)")
+        }
+    }
+    
+    func stopSound() {
+        player?.stop()
     }
 }
 
